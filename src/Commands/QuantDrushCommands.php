@@ -252,8 +252,11 @@ class QuantDrushCommands extends DrushCommands {
    *
    * @usage quant:seed-single --nid=1
    */
-  public function seedSingle($options = ['nid' => 1, 'vid' => FALSE, 'lang' => []])
-  {
+  public function seedSingle($options = [
+    'nid' => 1,
+    'vid' => FALSE,
+    'lang' => [],
+  ]) {
     $item = new NodeItem([
       'id' => $options['nid'],
       'vid' => $options['vid'],
