@@ -99,7 +99,7 @@ class UrlRegistrar implements HttpKernelInterface {
   /**
    * {@inheritdoc}
    */
-  public function handle(Request $request, int $type = self::MASTER_REQUEST, bool $catch = TRUE) {
+  public function handle(Request $request, int $type = self::MASTER_REQUEST, bool $catch = TRUE): Response {
     $response = $this->httpKernel->handle($request, $type, $catch);
     if ($this->determine($request, $response)) {
       $this->registry->add(
