@@ -41,3 +41,8 @@ services:
   quant.queue_factory:
     class: Drupal\quant\QuantQueueFactory
     parent: queue.database
+
+  queue_service_quant_seed_worker:
+    class: Drupal\quant\Queue\SeedQueueFactory
+    arguments:
+      - '@database'
