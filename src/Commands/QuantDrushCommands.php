@@ -11,6 +11,7 @@ use Drupal\quant\Event\CollectRedirectsEvent;
 use Drupal\quant\Event\CollectRoutesEvent;
 use Drupal\quant\Event\QuantCollectionEvents;
 use Drupal\quant\QuantQueueFactory;
+use Drupal\quant\Plugin\QueueItem\NodeItem;
 
 /**
  * A drush command file.
@@ -69,14 +70,22 @@ class QuantDrushCommands extends DrushCommands {
    * @command quant:run-queue
    * @aliases quant-queue-run
    * @option threads
-   *   Number of threads to use (default 5)
+   *   Number of threads to use
+   * @option items-limit
+   *   Number of items for each thread to process
    * @usage quant:run-queue --threads=5
    */
-  public function message($options = ['threads' => 5]) {
+  public function message($options = ['threads' => 5, 'items-limit' => 0]) {
+
     $this->output()->writeln("<info>Forking seed worker.</info>");
     $drushPath = $this->getDrushPath();
     $lockFilePath = sys_get_temp_dir() . '/quant_seed_worker.lock';
     $cmd = $drushPath . ' queue:run quant_seed_worker';
+
+    if ($options['items-limit'] > 0) {
+      $cmd .= " --items-limit={$options['items-limit']}";
+    }
+
     $this->output()->writeln("<comment>Using drush binary at $drushPath. Override with \$DRUSH_PATH if required.</comment>");
 
     // Bail if another run is in progress.
@@ -226,6 +235,37 @@ class QuantDrushCommands extends DrushCommands {
     }
 
     $this->output()->writeln('Successfully added [' . $queue->numberOfItems() . '] to the queue');
+  }
+
+  /**
+   * Drush command to seed a single node.
+   *
+   * @command quant:seed-single
+   * @aliases quant-seed-single
+   * @aliases qss
+   *
+   * @option nid
+   *  The node to seed
+   * @option vid
+   *  The revision id to seed
+   * @option lang
+   *   The language to seed
+   *
+   * @usage quant:seed-single --nid=1
+   */
+  public function seedSingle($options = [
+    'nid' => 1,
+    'vid' => FALSE,
+    'lang' => [],
+  ]) {
+    $item = new NodeItem([
+      'id' => $options['nid'],
+      'vid' => $options['vid'],
+      'lang_filter' => $options['lang'],
+    ]);
+    $manager = \Drupal::service('plugin.manager.queue_worker');
+    $worker = $manager->createInstance('quant_seed_worker');
+    $worker->processItem($item);
   }
 
 }
